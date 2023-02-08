@@ -1,4 +1,4 @@
-package contrib
+package QQ
 
 import (
 	"github.com/hashemzargari/QueenQueuer/logging"
@@ -8,10 +8,9 @@ import (
 type OptionKind string
 
 const (
-	K_BootMode OptionKind = "kind_boot_mode"
-	K_Broker   OptionKind = "kind_broker"
-	K_Databse  OptionKind = "kind_database"
-	K_Logger   OptionKind = "kind_logger"
+	K_Broker  OptionKind = "broker"
+	K_Databse OptionKind = "database"
+	K_Logger  OptionKind = "kind_logger"
 )
 
 type ConfigOption struct {
@@ -19,7 +18,15 @@ type ConfigOption struct {
 	Value any
 }
 
+func LoggerConfig(logger logging.Logger) *ConfigOption {
+	return &ConfigOption{
+		Kind:  K_Logger,
+		Value: logger,
+	}
+}
+
 type App struct {
+	Name   string
 	logger logging.Logger
 	tasks  map[string]Task
 }
@@ -47,21 +54,20 @@ func (a *App) updateConfig(options ...*ConfigOption) {
 	}
 }
 
-func (a *App) getDefaultConfigOptions() []*ConfigOption {
-	var options []*ConfigOption
+func (a *App) prepareDefaultConfigOptions() *App {
 	// TODO: Add default options
 	// Logger
-	options = append(options, &ConfigOption{
-		Kind:  K_Logger,
-		Value: loggingAdapters.DefaultLogger{},
-	})
-	return options
+	a.
+		SetConfig(LoggerConfig(loggingAdapters.DefaultLogger{}))
+	return a
 }
 
-func NewApp(options ...*ConfigOption) *App {
-	a := &App{}
-	allOptions := a.getDefaultConfigOptions()
-	allOptions = append(allOptions, options...)
-	a.updateConfig(allOptions...)
+func NewApp(name string, options ...*ConfigOption) *App {
+	a := &App{
+		Name: name,
+	}
+	a.
+		prepareDefaultConfigOptions().
+		updateConfig(options...)
 	return a
 }
