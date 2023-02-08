@@ -33,19 +33,17 @@ func (a *App) Logger() logging.Logger {
 	return a.logger
 }
 
-func (a *App) RegisterTasks(tasks []Task) {
+func (a *App) RegisterTasks(tasks ...Task) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (a *App) RegisterTask(task Task) {
-	a.RegisterTasks([]Task{task})
-}
-
-func (a *App) updateConfig(option *ConfigOption) {
-	switch option.Kind {
-	case K_Logger:
-		a.logger = option.Value.(logging.Logger)
+func (a *App) updateConfig(options ...*ConfigOption) {
+	for _, option := range options {
+		switch option.Kind {
+		case K_Logger:
+			a.logger = option.Value.(logging.Logger)
+		}
 	}
 }
 
@@ -64,8 +62,6 @@ func NewApp(options ...*ConfigOption) *App {
 	a := &App{}
 	allOptions := a.getDefaultConfigOptions()
 	allOptions = append(allOptions, options...)
-	for _, option := range allOptions {
-		a.updateConfig(option)
-	}
+	a.updateConfig(allOptions...)
 	return a
 }
