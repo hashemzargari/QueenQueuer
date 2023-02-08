@@ -11,7 +11,7 @@ import (
 type DefaultLogger struct {
 }
 
-func (d *DefaultLogger) bindCallers() []*logging.Caller {
+func (d DefaultLogger) bindCallers() []*logging.Caller {
 	pc := make([]uintptr, 10)
 	n := runtime.Callers(0, pc)
 	var callers []*logging.Caller
@@ -27,24 +27,24 @@ func (d *DefaultLogger) bindCallers() []*logging.Caller {
 	return callers
 }
 
-func (d *DefaultLogger) getStackTrace() string {
+func (d DefaultLogger) getStackTrace() string {
 	buf := make([]byte, 1<<16)
 	n := runtime.Stack(buf, true)
 	return string(buf[:n])
 }
 
-func (d *DefaultLogger) Error(err error) {
+func (d DefaultLogger) Error(err error) {
 	d.prepareLog(err.Error(), logging.ERROR)
 }
 
-func (d *DefaultLogger) Message(msg string) {
+func (d DefaultLogger) Message(msg string) {
 	d.prepareLog(msg, logging.INFO)
 }
-func (d *DefaultLogger) Warning(msg string) {
+func (d DefaultLogger) Warning(msg string) {
 	d.prepareLog(msg, logging.WARNING)
 }
 
-func (d *DefaultLogger) prepareLog(msg string, logMode logging.LogMode) {
+func (d DefaultLogger) prepareLog(msg string, logMode logging.LogMode) {
 	callers := d.bindCallers()
 	d.saveLog(&logging.Log{
 		Time:      time.Now(),
@@ -54,20 +54,16 @@ func (d *DefaultLogger) prepareLog(msg string, logMode logging.LogMode) {
 	}, logMode)
 }
 
-func (d *DefaultLogger) saveLog(logPointer *logging.Log, logMode logging.LogMode) {
+func (d DefaultLogger) saveLog(logPointer *logging.Log, logMode logging.LogMode) {
 	// TODO: add handlers and routing logic for logs
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.LUTC)
-	blue := color.New(color.FgBlue).SprintFunc()
-	yellow := color.New(color.FgYellow).SprintFunc()
-	red := color.New(color.FgRed).SprintFunc()
-	cyan := color.New(color.FgCyan).SprintFunc()
+	cl := color.New(color.FgCyan).SprintFunc()
 	switch logMode {
-	case logging.INFO:
-		log.Println(blue("[INFO]\t", logPointer.Message))
 	case logging.WARNING:
-		log.Println(yellow("[WARNING]\t", logPointer.Message))
+		cl = color.New(color.FgYellow).SprintFunc()
 	case logging.ERROR:
-		log.Println(red("[ERROR]\t", logPointer.Message))
+		cl = color.New(color.FgRed).SprintFunc()
 	}
-	log.Println(cyan("Full stack trace:\n", logPointer.TraceBack))
+	log.Println(cl("[", logMode, "]\t", logPointer.Message))
+	log.Println(cl("Full stack trace:\n", logPointer.TraceBack))
 }
